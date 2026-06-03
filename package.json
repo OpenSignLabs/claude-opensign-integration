@@ -4,7 +4,8 @@
   "description": "Claude integration tools for OpenSign e-signature workflows",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "start:mcp": "node server.js"
   },
   "keywords": [
     "opensign",

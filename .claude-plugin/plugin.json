@@ -11,6 +11,36 @@
   "homepage": "https://www.opensignlabs.com/",
   "repository": "https://github.com/OpenSignLabs/claude-opensign-integration",
   "license": "ISC",
+  "defaultEnabled": false,
+  "mcpServers": {
+    "opensign": {
+      "command": "node",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/server.js"
+      ],
+      "cwd": "${CLAUDE_PLUGIN_ROOT}",
+      "env": {
+        "OPENSIGN_API_KEY": "${user_config.api_key}",
+        "OPENSIGN_BASE_URL": "${user_config.base_url}"
+      }
+    }
+  },
+  "userConfig": {
+    "api_key": {
+      "type": "string",
+      "title": "OpenSign API key",
+      "description": "API token used to authenticate requests to OpenSign.",
+      "sensitive": true,
+      "required": true
+    },
+    "base_url": {
+      "type": "string",
+      "title": "OpenSign API base URL",
+      "description": "Base URL for the OpenSign API.",
+      "default": "https://app.opensignlabs.com/api/v1.2",
+      "required": true
+    }
+  },
   "keywords": [
     "opensign",
     "esignature",

@@ -15,7 +15,11 @@
       "author": {
         "name": "OpenSignLabs"
       },
-      "source": ".",
+      "source": {
+        "source": "github",
+        "repo": "OpenSignLabs/claude-opensign-integration"
+      },
+      "defaultEnabled": false,
       "category": "productivity",
       "homepage": "https://www.opensignlabs.com/"
     }

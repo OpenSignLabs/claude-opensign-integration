@@ -1,12 +1,37 @@
+jest.mock('axios');
+
+const axios = require('axios');
 const OpenSignClaudeIntegration = require('./index');
 
-describe('OpenSignClaudeIntegration E2E', () => {
+describe('OpenSignClaudeIntegration', () => {
     let integration;
+    let mockClient;
 
-    beforeAll(() => {
-        const apiKey = process.env.OPENSIGN_API_KEY || 'opensign.7BG7XjfOD1nBrAsFQnoPKy';
-        const baseURL = 'https://staging-app.opensignlabs.com/api/v1.2';
-        integration = new OpenSignClaudeIntegration(apiKey, baseURL);
+    beforeEach(() => {
+        mockClient = {
+            get: jest.fn(),
+            post: jest.fn()
+        };
+        axios.create.mockReturnValue(mockClient);
+        integration = new OpenSignClaudeIntegration('test-api-key', 'https://api.example.test');
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
+    test('requires an API key', () => {
+        expect(() => new OpenSignClaudeIntegration()).toThrow('API Key is required');
+    });
+
+    test('configures axios with OpenSign API headers', () => {
+        expect(axios.create).toHaveBeenCalledWith({
+            baseURL: 'https://api.example.test',
+            headers: {
+                'x-api-token': 'test-api-key',
+                'Content-Type': 'application/json'
+            }
+        });
     });
 
     test('should have defined tools', () => {
@@ -17,46 +42,44 @@ describe('OpenSignClaudeIntegration E2E', () => {
     });
 
     test('get_user should return user details', async () => {
+        mockClient.get.mockResolvedValue({ data: { email: 'user@example.com' } });
+
         const result = await integration.executeTool('get_user', {});
+
+        expect(mockClient.get).toHaveBeenCalledWith('/getuser');
         expect(result).toBeDefined();
-        expect(result.email).toBeDefined();
+        expect(result.email).toBe('user@example.com');
     });
 
     test('get_credits should return credit details', async () => {
+        mockClient.get.mockResolvedValue({ data: { total_credits: 42 } });
+
         const result = await integration.executeTool('get_credits', {});
+
+        expect(mockClient.get).toHaveBeenCalledWith('/getcredits');
         expect(result).toBeDefined();
-        expect(result.total_credits).toBeDefined();
+        expect(result.total_credits).toBe(42);
     });
 
-    let testContactEmail = `test.contact.${Date.now()}@example.com`;
     test('create_contact should create a new contact', async () => {
-        try {
-            const result = await integration.executeTool('create_contact', {
-                name: 'Test Contact',
-                email: testContactEmail,
-                phone: '1234567890',
-                company: 'Test Company',
-                job_title: 'Tester'
-            });
-            expect(result).toBeDefined();
-            expect(result.email).toBe(testContactEmail);
-        } catch (error) {
-            // Handle if contact already exists, though we use timestamp
-            if (error.message.includes('Contact already exists')) {
-                console.log('Contact already exists, skipping creation assertion.');
-            } else {
-                throw error;
-            }
-        }
+        const contact = {
+            name: 'Test Contact',
+            email: 'test.contact@example.com',
+            phone: '1234567890',
+            company: 'Test Company',
+            job_title: 'Tester'
+        };
+        mockClient.post.mockResolvedValue({ data: contact });
+
+        const result = await integration.executeTool('create_contact', contact);
+
+        expect(mockClient.post).toHaveBeenCalledWith('/createcontact', contact);
+        expect(result).toEqual(contact);
     });
 
-    // Create a dummy base64 PDF (a very minimal valid PDF)
-    const dummyBase64Pdf = 'JVBERi0xLjQKJcOkw7zDtsOfCjIgMCBvYmoKPDwvTGVuZ3RoIDMgMCBSL0ZpbHRlci9GbGF0ZURlY29kZT4+CnN0cmVhbQp4nDPQM1Qo5ypUMFAwALJMLY31jBQsTAz1LBSKikB8Q7jQKAhfK7EoM0UvOT9XwVFfITNPoaQ0V6G4tCg/TyE3P08hmggA+6IQPgplbmRzdHJlYW0KZW5kb2JqCgozIDAgb2JqCjUyCmVuZG9iagoKMSAwIG9iago8PC9UeXBlL1BhZ2UvTWVkaWFCb3hbMCAwIDU5NSA4NDJdL1Jlc291cmNlczw8L0ZvbnQ8PC9GMCA0IDAgUj4+Pj4vQ29udGVudHMgMiAwIFIvUGFyZW50IDUgMCBSPj4KZW5kb2JqCgo0IDAgb2JqCjw8L1R5cGUvRm9udC9TdWJ0eXBlL1R5cGUxL0Jhc2VGb250L1RpbWVzLVJvbWFuPj4KZW5kb2JqCgo1IDAgb2JqCjw8L1R5cGUvUGFnZXMvQ291bnQgMS9LaWRzWzEgMCBSXT4+CmVuZG9iagoKNiAwIG9iago8PC9UeXBlL0NhdGFsb2cvUGFnZXMgNSAwIFI+PgplbmRvYmoKCjcgMCBvYmoKPDwvUHJvZHVjZXIoR2hvc3RzY3JpcHQgOS41NS4wKS9DcmVhdGlvbkRhdGUoRDoyMDI0MDYwMjIwMjg0MCswMCcwMCcpL01vZERhdGUoRDoyMDI0MDYwMjIwMjg0MCswMCcwMCcpPj4KZW5kb2JqCgp4cmVmCjAgOAowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAxMjUgMDAwMDAgbiAKMDAwMDAwMDAxNSAwMDAwMCBuIAowMDAwMDAwMTA2IDAwMDAwIG4gCjAwMDAwMDAyMjMgMDAwMDAgbiAKMDAwMDAwMDMxMSAwMDAwMCBuIAowMDAwMDAwMzY4IDAwMDAwIG4gCjAwMDAwMDA0MTggMDAwMDAgbiAKdHJhaWxlcgo8PC9TaXplIDgvUm9vdCA2IDAgUi9JbmZvIDcgMCBSL0lEIFs8QTM0MjdCRThEOEM5M0E0MjlEMzUxOEMxMkEyMkIzM0Q+PEEzNDI3QkU4RDhDOTNBNDI5RDM1MThDMTJBMjJCMzNEPl0+PgpzdGFydHhyZWYKNTA4CiUlRU9GCg==';
-
-    let draftDocumentId;
     test('create_draft_document should return a draft document url and id', async () => {
-        const result = await integration.executeTool('create_draft_document', {
-            file: dummyBase64Pdf,
+        const documentData = {
+            file: 'base64-pdf',
             title: 'Test Draft Document',
             signers: [
                 {
@@ -74,34 +97,78 @@ describe('OpenSignClaudeIntegration E2E', () => {
                     ]
                 }
             ]
-        });
-        expect(result).toBeDefined();
-        expect(result.url).toBeDefined();
-        expect(result.document_id || result.objectId).toBeDefined();
-        draftDocumentId = result.document_id || result.objectId;
+        };
+        mockClient.post.mockResolvedValue({ data: { url: 'https://example.test/draft', document_id: 'doc-123' } });
+
+        const result = await integration.executeTool('create_draft_document', documentData);
+
+        expect(mockClient.post).toHaveBeenCalledWith('/draftdocument', documentData);
+        expect(result).toEqual({ url: 'https://example.test/draft', document_id: 'doc-123' });
+    });
+
+    test('create_document should send a document for signing', async () => {
+        const documentData = {
+            file: 'base64-pdf',
+            title: 'Test Document',
+            signers: [
+                {
+                    name: 'Test Signer',
+                    email: 'testsigner@example.com',
+                    widgets: [{ type: 'signature', page: 1, x: 100, y: 100, w: 100, h: 50 }]
+                }
+            ]
+        };
+        mockClient.post.mockResolvedValue({ data: { objectId: 'doc-456' } });
+
+        const result = await integration.executeTool('create_document', documentData);
+
+        expect(mockClient.post).toHaveBeenCalledWith('/createdocument', documentData);
+        expect(result).toEqual({ objectId: 'doc-456' });
     });
 
     test('get_document should return document details', async () => {
-        if (!draftDocumentId) {
-            console.warn('Skipping get_document test as draftDocumentId is not set');
-            return;
-        }
+        mockClient.get.mockResolvedValue({ data: { objectId: 'doc-123', title: 'Test Draft Document' } });
+
         const result = await integration.executeTool('get_document', {
-            document_id: draftDocumentId
+            document_id: 'doc-123'
         });
-        expect(result).toBeDefined();
-        expect(result.objectId).toBe(draftDocumentId);
+
+        expect(mockClient.get).toHaveBeenCalledWith('/document/doc-123');
+        expect(result.objectId).toBe('doc-123');
         expect(result.title).toBe('Test Draft Document');
     });
 
     test('get_document_list should return a list of draft documents', async () => {
+        mockClient.get.mockResolvedValue({ data: { result: [{ objectId: 'doc-123' }] } });
+
         const result = await integration.executeTool('get_document_list', {
             doctype: 'draft',
             limit: 5,
             skip: 0
         });
-        expect(result).toBeDefined();
-        // Since the return schema is { result: [...] }
+
+        expect(mockClient.get).toHaveBeenCalledWith('/documentlist/draft', {
+            params: { limit: 5, skip: 0 }
+        });
         expect(Array.isArray(result.result)).toBe(true);
+    });
+
+    test('formats OpenSign API errors', async () => {
+        mockClient.get.mockRejectedValue({
+            response: {
+                status: 401,
+                data: { error: 'Unauthorized' }
+            }
+        });
+
+        await expect(integration.executeTool('get_user', {}))
+            .rejects
+            .toThrow('OpenSign API Error: 401 - {"error":"Unauthorized"}');
+    });
+
+    test('rejects unknown tools', async () => {
+        await expect(integration.executeTool('unknown_tool', {}))
+            .rejects
+            .toThrow('Tool unknown_tool is not implemented');
     });
 });

@@ -2,6 +2,8 @@
 
 This package provides a seamless integration between Claude and OpenSign, allowing Claude to perform e-signature operations like creating draft documents, managing contacts, and sending documents directly via tools!
 
+The repository also ships Claude Code plugin metadata and a bundled stdio MCP server. When installed as a Claude Code plugin, it prompts for an OpenSign API key as a sensitive user configuration value and exposes the OpenSign operations as MCP tools.
+
 ## How to use it with Claude
 
 1. **Include the Tool Definitions:**
@@ -38,6 +40,20 @@ This package provides a seamless integration between Claude and OpenSign, allowi
 - `create_document`: Create and instantly send a document for signing.
 - `get_document`: Retrieve details for a specific document by its ID.
 - `get_document_list`: Retrieve a list of documents by their status (e.g., draft, completed, inprogress).
+
+## Claude Code Plugin Test
+
+Install dependencies and run:
+
+```bash
+npm test
+```
+
+To smoke-test the MCP server manually:
+
+```bash
+printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test-client","version":"1.0.0"}}}' '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' | OPENSIGN_API_KEY=<YOUR_OPENSIGN_API_KEY> node server.js
+```
 
 ## Example: Creating a Draft Document via Claude
 
