@@ -4,6 +4,8 @@ This package provides a seamless integration between Claude and OpenSign, allowi
 
 The repository also ships Claude Code plugin metadata and a bundled stdio MCP server. When installed as a Claude Code plugin, it prompts for an OpenSign API key as a sensitive user configuration value and exposes the OpenSign operations as MCP tools.
 
+For Claude surfaces that use remote MCP, the same tools can be deployed to Cloudflare Workers. The Worker entrypoint is `worker.mjs`, the Wrangler configuration is `wrangler.toml`, and the deployed MCP endpoint is `/mcp`.
+
 ## How to use it with Claude
 
 1. **Include the Tool Definitions:**
@@ -53,6 +55,20 @@ To smoke-test the MCP server manually:
 
 ```bash
 printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test-client","version":"1.0.0"}}}' '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' | OPENSIGN_API_KEY=<YOUR_OPENSIGN_API_KEY> node server.js
+```
+
+To validate the Cloudflare Worker bundle:
+
+```bash
+npm run check:worker
+```
+
+Deploy the remote MCP server with:
+
+```bash
+npx wrangler login
+npx wrangler secret put OPENSIGN_API_KEY
+npm run deploy:worker
 ```
 
 ## Example: Creating a Draft Document via Claude

@@ -1,0 +1,7 @@
+name = "opensign-claude-mcp"
+main = "worker.mjs"
+compatibility_date = "2026-06-03"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+OPENSIGN_BASE_URL = "https://app.opensignlabs.com/api/v1.2"
