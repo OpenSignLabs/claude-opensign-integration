@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "opensign-plugins",
+  "version": "1.0.0",
+  "description": "OpenSign plugins for Claude Code and Claude Cowork.",
+  "owner": {
+    "name": "OpenSignLabs",
+    "url": "https://github.com/OpenSignLabs"
+  },
+  "plugins": [
+    {
+      "name": "opensign",
+      "description": "Use OpenSign API tools for e-signature workflows including account lookup, credits, contacts, draft documents, document sending, and document retrieval.",
+      "version": "1.0.0",
+      "author": {
+        "name": "OpenSignLabs"
+      },
+      "source": ".",
+      "category": "productivity",
+      "homepage": "https://www.opensignlabs.com/"
+    }
+  ]
+}

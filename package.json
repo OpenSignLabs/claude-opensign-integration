@@ -1,0 +1,24 @@
+{
+  "name": "claude-opensign-integration",
+  "version": "1.0.0",
+  "description": "Claude integration tools for OpenSign e-signature workflows",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [
+    "opensign",
+    "claude",
+    "esignature",
+    "documents"
+  ],
+  "author": "OpenSignLabs",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "axios": "^1.16.1"
+  },
+  "devDependencies": {
+    "jest": "^30.4.2"
+  }
+}
